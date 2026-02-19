@@ -34,7 +34,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv("${sonarqube}") {
+                withSonarQubeEnv("${SONAR_SERVER}") {
                     sh 'mvn clean verify sonar:sonar'
                 }
             }
@@ -48,19 +48,21 @@ pipeline {
 
         stage('Upload to Nexus') {
             steps {
-                nexusArtifactUploader artifacts: [[
-                    artifactId: 'my-webapp',
-                    classifier: '',
-                    file: 'target/my-webapp.war',
-                    type: 'war'
-                ]],
-                credentialsId: 'Nexus',
-                groupId: 'com.example',
-                nexusUrl: "${http://13.203.208.175:8081/}",
-                nexusVersion: 'nexus3',
-                protocol: 'http',
-                repository: 'my-webapp01',
-                version: '1.0-SNAPSHOT'
+                nexusArtifactUploader(
+                    artifacts: [[
+                        artifactId: 'my-webapp',
+                        classifier: '',
+                        file: 'target/my-webapp.war',
+                        type: 'war'
+                    ]],
+                    credentialsId: 'Nexus',
+                    groupId: 'com.example',
+                    nexusUrl: '13.203.208.175:8081',
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    repository: 'my-webapp01',
+                    version: '1.0-SNAPSHOT'
+                )
             }
         }
 
@@ -68,7 +70,7 @@ pipeline {
             steps {
                 deploy adapters: [tomcat9(
                     credentialsId: 'tomcat-creds',
-                    url: "${http://13.234.231.55:8080/}"
+                    url: "${TOMCAT_URL}"
                 )],
                 contextPath: 'my-webapp03',
                 war: '**/*.war'
